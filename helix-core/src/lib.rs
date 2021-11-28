@@ -85,6 +85,10 @@ pub fn runtime_dir() -> std::path::PathBuf {
 }
 
 pub fn config_dir() -> std::path::PathBuf {
+    if let Ok(dir) = std::env::var("HELIX_CONFIG_DIRECTORY") {
+        return dir.into();
+    }
+
     // TODO: allow env var override
     let strategy = choose_base_strategy().expect("Unable to find the config directory!");
     let mut path = strategy.config_dir();
