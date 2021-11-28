@@ -67,9 +67,19 @@ impl Application {
             toml::from_slice(include_bytes!("../../languages.toml")).expect(builtin_err_msg);
         let def_syn_loader_conf: helix_core::syntax::Configuration =
             def_lang_conf.clone().try_into().expect(builtin_err_msg);
-        let user_lang_conf = std::fs::read(conf_dir.join("languages.toml"))
-            .ok()
-            .map(|raw| toml::from_slice(&raw));
+
+        let user_lang_conf = {
+            let conf_path = if let Ok(path) = std::env::var("HELIX_LANGUAGES_CONFIG") {
+                path.into()
+            } else {
+                conf_dir.join("languages.toml")
+            };
+
+            std::fs::read(conf_path)
+                .ok()
+                .map(|raw| toml::from_slice(&raw))
+        };
+
         let lang_conf = match user_lang_conf {
             Some(Ok(value)) => Ok(merge_toml_values(def_lang_conf, value)),
             Some(err @ Err(_)) => err,

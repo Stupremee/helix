@@ -85,12 +85,17 @@ FLAGS:
         std::process::exit(0);
     }
 
-    let conf_dir = helix_core::config_dir();
-    if !conf_dir.exists() {
-        std::fs::create_dir_all(&conf_dir).ok();
-    }
+    let config_path = if let Ok(path) = std::env::var("HELIX_CONFIG") {
+        path.into()
+    } else {
+        let conf_dir = helix_core::config_dir();
+        if !conf_dir.exists() {
+            std::fs::create_dir_all(&conf_dir).ok();
+        }
+        conf_dir.join("config.toml")
+    };
 
-    let config = match std::fs::read_to_string(conf_dir.join("config.toml")) {
+    let config = match std::fs::read_to_string(config_path) {
         Ok(config) => toml::from_str(&config)
             .map(merge_keys)
             .unwrap_or_else(|err| {
